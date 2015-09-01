@@ -10,12 +10,18 @@ import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
-import org.jgrapht.UndirectedGraph;
+
+import java.util.Set;
+import java.util.Vector;
+
+import Graph.Graph;
+import Graph.Vertex;
 
 /**
  * Created by Julio on 03/08/2015.
  */
 public class CanvasView extends View {
+    //DefaultMutableTreeNode t;
     public int width;
     public int height;
     private Bitmap mBitmap;
@@ -25,11 +31,14 @@ public class CanvasView extends View {
     private Paint mPaint;
     private float mX, mY;
     private static final float TOLERANCE = 5;
+    private Graph<TrackNode , Object> trackRepresentation;
 
     public CanvasView(Context c, AttributeSet attrs) {
         super(c, attrs);
 
-        UndirectedGraph stringGraph;// = createStringGraph();
+
+        this.trackRepresentation = createGraph();
+
         context = c;
 
         // we set a new Path
@@ -42,6 +51,71 @@ public class CanvasView extends View {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeWidth(4f);
+
+    }
+
+    public Graph<TrackNode, Object> createGraph(){
+
+        Graph<TrackNode, Object> g;
+        g = new Graph<TrackNode, Object> ();
+
+        TrackNode v1 = new TrackNode(Math.random(),Math.random());
+        TrackNode v2 = new TrackNode(Math.random(), Math.random());
+        TrackNode v3 = new TrackNode(Math.random(),Math.random());
+        TrackNode v4 = new TrackNode(Math.random(),Math.random());
+
+
+        // add the vertices
+        g.addVertex(v1);
+        g.addVertex(v2);
+        g.addVertex(v3);
+        g.addVertex(v4);
+
+        // add edges to create a circuit
+        g.addEdge(v1, v2);
+        g.addEdge(v2, v3);
+        g.addEdge(v3, v4);
+        g.addEdge(v4, v1);
+
+        System.out.println(v1);
+        System.out.println(v2);
+        System.out.println(v3);
+        System.out.println(v4);
+
+
+
+        return g;
+    }
+
+    public void drawPath(int w, int h){
+
+        Vector< Vertex<TrackNode> > vertexes = trackRepresentation.vertexes;
+
+
+
+        System.out.println("Draw path");
+        Vertex<TrackNode> first = vertexes.firstElement();
+        Vertex<TrackNode> last = vertexes.firstElement();
+        mPath.moveTo((float) (w * first.value.posx), (float) (h * first.value.posy));
+        for ( Vertex<TrackNode> v : vertexes){
+
+            TrackNode t = v.value;
+            mPath.addCircle((float) (w * t.posx), (float) (h * t.posx), 10, Path.Direction.CCW );
+            if(v != first) {
+                //mPath.moveTo((float) (w * last.value.posx), (float) (h * last.value.posy));
+                mPath.lineTo((float) (w * t.posx), (float) (h * t.posx)); //draw
+            }
+            last = v;
+
+
+            //Set<DefaultEdge> edges = trackRepresentation.edgesOf(t);
+
+
+
+
+        }
+        invalidate();
+
     }
 
     // override onSizeChanged
@@ -52,6 +126,7 @@ public class CanvasView extends View {
         // your Canvas will draw onto the defined Bitmap
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
+        drawPath(w,h);
     }
 
     // override onDraw
