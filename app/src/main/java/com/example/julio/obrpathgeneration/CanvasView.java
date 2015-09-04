@@ -25,9 +25,14 @@ public class CanvasView extends View {
 
 
     public static final int ENTRANCE_SIDE_LEFT  = 1;
-    public static final int ENTRANCE_SIDE_RIGTH  = 2;
+    public static final int ENTRANCE_SIDE_RIGHT  = 2;
     public static final int ENTRANCE_SIDE_TOP  = 3;
     public static final int ENTRANCE_SIDE_BOTTOM  = 4;
+
+    public static final int EXIT_SIDE_LEFT  = 1;
+    public static final int EXIT_SIDE_RIGHT  = 2;
+    public static final int EXIT_SIDE_TOP  = 3;
+    public static final int EXIT_SIDE_BOTTOM  = 4;
 
     private Rect trackBounds;
     private int entrancePos;
@@ -47,6 +52,10 @@ public class CanvasView extends View {
     private Graph<TrackNode , Object> trackRepresentation;
     private Point entrancePoint;
     private Rect entranceBounds;
+    private int exitPos;
+    private int exitSide;
+    private Rect exitBounds;
+    private Point exitPoint;
 
     public CanvasView(Context c, AttributeSet attrs) {
         super(c, attrs);
@@ -153,7 +162,10 @@ public class CanvasView extends View {
         entrancePos = (int) (Math.random()*this.trackBounds.width());
         entranceSide = ENTRANCE_SIDE_LEFT;
 
-        computeEntrance();
+        exitPos = (int) (Math.random()*this.trackBounds.width());
+        exitSide = EXIT_SIDE_RIGHT;
+
+        computeEntranceAndExit();
 
         drawPath(w, h);
     }
@@ -179,16 +191,20 @@ public class CanvasView extends View {
         int maxSquareSide = Math.min(this.getWidth() - offset, this.getHeight() - offset);
         canvas.drawRect(trackBounds, internalPaint);
 
-        // draw entrances and exits
-
+        // draw entrance
         internalPaint.setColor(Color.BLUE);
         internalPaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        canvas.drawRect(entranceBounds.left,entranceBounds.top, entranceBounds.right, entranceBounds.bottom, internalPaint);
+        canvas.drawRect(entranceBounds, internalPaint);
+
+        // draw exit
+        internalPaint.setColor(Color.RED);
+        internalPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        canvas.drawRect(exitBounds, internalPaint);
 
 
     }
 
-    public void computeEntrance(){
+    public void computeEntranceAndExit(){
 
         switch(entranceSide) {
             case ENTRANCE_SIDE_LEFT:
@@ -197,7 +213,7 @@ public class CanvasView extends View {
             case ENTRANCE_SIDE_BOTTOM:
                 entrancePoint = new Point(entrancePos, trackBounds.bottom);
                 break;
-            case ENTRANCE_SIDE_RIGTH:
+            case ENTRANCE_SIDE_RIGHT:
                 entrancePoint = new Point(trackBounds.right, entrancePos);
                 break;
             case ENTRANCE_SIDE_TOP:
@@ -209,6 +225,26 @@ public class CanvasView extends View {
 
         entranceBounds = new Rect(entrancePoint.x - entranceBoundsOffset, entrancePoint.y - entranceBoundsOffset,
                                   entrancePoint.x + entranceBoundsOffset, entrancePoint.y + entranceBoundsOffset);
+
+        switch(exitSide) {
+            case EXIT_SIDE_LEFT:
+                exitPoint = new Point(trackBounds.left, exitPos);
+                break;
+            case EXIT_SIDE_BOTTOM:
+                exitPoint = new Point(exitPos, trackBounds.bottom);
+                break;
+            case EXIT_SIDE_RIGHT:
+                exitPoint = new Point(trackBounds.right, exitPos);
+                break;
+            case EXIT_SIDE_TOP:
+                exitPoint = new Point(exitPos, trackBounds.top);
+                break;
+        }
+
+        int exitBoundsOffset = 20;
+
+        exitBounds = new Rect(exitPoint.x - exitBoundsOffset, exitPoint.y - exitBoundsOffset,
+                exitPoint.x + exitBoundsOffset, exitPoint.y + exitBoundsOffset);
     }
 
     public Point getEntrance(){
