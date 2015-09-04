@@ -6,12 +6,13 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Point;
+import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
 
 
-import java.util.Set;
 import java.util.Vector;
 
 import Graph.Graph;
@@ -21,6 +22,18 @@ import Graph.Vertex;
  * Created by Julio on 03/08/2015.
  */
 public class CanvasView extends View {
+
+
+    public static final int ENTRANCE_SIDE_LEFT  = 1;
+    public static final int ENTRANCE_SIDE_RIGTH  = 2;
+    public static final int ENTRANCE_SIDE_TOP  = 3;
+    public static final int ENTRANCE_SIDE_BOTTOM  = 4;
+
+    private Rect trackBounds;
+    private int entrancePos;
+    private int entranceSide; // entrance side
+
+
     //DefaultMutableTreeNode t;
     public int width;
     public int height;
@@ -32,6 +45,8 @@ public class CanvasView extends View {
     private float mX, mY;
     private static final float TOLERANCE = 5;
     private Graph<TrackNode , Object> trackRepresentation;
+    private Point entrancePoint;
+    private Rect entranceBounds;
 
     public CanvasView(Context c, AttributeSet attrs) {
         super(c, attrs);
@@ -51,6 +66,7 @@ public class CanvasView extends View {
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeWidth(4f);
+
 
     }
 
@@ -126,7 +142,20 @@ public class CanvasView extends View {
         // your Canvas will draw onto the defined Bitmap
         mBitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
-        drawPath(w,h);
+
+
+        int offset = 10;
+        int maxSquareSide = Math.min(this.getWidth() - offset, this.getHeight() - offset);
+
+
+        this.trackBounds = new Rect((int)(this.getX() - offset), (int)(this.getY() - offset), maxSquareSide, maxSquareSide);
+
+        entrancePos = (int) (Math.random()*this.trackBounds.width());
+        entranceSide = ENTRANCE_SIDE_LEFT;
+
+        computeEntrance();
+
+        drawPath(w, h);
     }
 
     // override onDraw
@@ -135,6 +164,55 @@ public class CanvasView extends View {
         super.onDraw(canvas);
         // draw the mPath with the mPaint on the canvas when onDraw
         canvas.drawPath(mPath, mPaint);
+
+        Paint internalPaint = new Paint();
+        //mPaint.setAntiAlias(true);
+        internalPaint.setColor(Color.BLACK);
+        internalPaint.setStyle(Paint.Style.STROKE);
+        //mPaint.setStrokeJoin(Paint.Join.ROUND);
+        internalPaint.setStrokeWidth(2f);
+
+
+
+        // draw bounds
+        int offset = 10;
+        int maxSquareSide = Math.min(this.getWidth() - offset, this.getHeight() - offset);
+        canvas.drawRect(trackBounds, internalPaint);
+
+        // draw entrances and exits
+
+        internalPaint.setColor(Color.BLUE);
+        internalPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        canvas.drawRect(entranceBounds.left,entranceBounds.top, entranceBounds.right, entranceBounds.bottom, internalPaint);
+
+
+    }
+
+    public void computeEntrance(){
+
+        switch(entranceSide) {
+            case ENTRANCE_SIDE_LEFT:
+                entrancePoint = new Point(trackBounds.left, entrancePos);
+                break;
+            case ENTRANCE_SIDE_BOTTOM:
+                entrancePoint = new Point(entrancePos, trackBounds.bottom);
+                break;
+            case ENTRANCE_SIDE_RIGTH:
+                entrancePoint = new Point(trackBounds.right, entrancePos);
+                break;
+            case ENTRANCE_SIDE_TOP:
+                entrancePoint = new Point(entrancePos, trackBounds.top);
+                break;
+        }
+
+        int entranceBoundsOffset = 20;
+
+        entranceBounds = new Rect(entrancePoint.x - entranceBoundsOffset, entrancePoint.y - entranceBoundsOffset,
+                                  entrancePoint.x + entranceBoundsOffset, entrancePoint.y + entranceBoundsOffset);
+    }
+
+    public Point getEntrance(){
+        return entrancePoint;
     }
 
     // when ACTION_DOWN start touch according to the x,y values
